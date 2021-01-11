@@ -1,5 +1,5 @@
 import { firestoreAction } from 'vuexfire';
-import { db } from '@/firebase/index';
+import { db } from '@/firebase';
 
 export default {
   namespaced: true,
