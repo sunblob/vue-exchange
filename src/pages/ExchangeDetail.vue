@@ -43,9 +43,25 @@
                       </div>
                     </div>
                     <exchange-deal-modal
+                      v-if="canMakeDeal"
                       :onModalSubmit="() => {}"
                       :exchange="exchange"
+                      :offeredExchanges="authUserExchanges || []"
                     />
+                    <router-link
+                      v-if="!isAuth"
+                      to="/login"
+                      class="button is-fullwidth is-large is-success is-outlined"
+                    >
+                      Login to make an offer
+                    </router-link>
+                    <button
+                      v-if="isExchangeOwner"
+                      disabled
+                      class="button is-fullwidth is-large is-danger is-outlined"
+                    >
+                      Your exchange
+                    </button>
                     <div class="content">
                       <ul class="m-t-none">
                         <li>
@@ -102,6 +118,21 @@ export default {
     },
     user() {
       return this.exchange.user || {};
+    },
+    authUser() {
+      return this.$store.state.auth.user;
+    },
+    authUserExchanges() {
+      return this.authUser && this.authUser.profile.exchanges;
+    },
+    isExchangeOwner() {
+      return this.$store.getters['auth/isExchangeOwner'](this.user.id);
+    },
+    canMakeDeal() {
+      return this.isAuth && !this.isExchangeOwner;
+    },
+    isAuth() {
+      return this.$store.getters['auth/isAuthenticated'];
     },
   },
   created() {

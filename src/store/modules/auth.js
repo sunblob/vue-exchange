@@ -78,5 +78,8 @@ export default {
   },
   getters: {
     isAuthenticated: (state) => !!state.user,
+    isExchangeOwner: (state) => (id) => {
+      return state.user && id && state.user.uid === id;
+    },
   },
 };

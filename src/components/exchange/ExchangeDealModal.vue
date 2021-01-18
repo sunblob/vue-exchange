@@ -1,5 +1,9 @@
 <template>
-  <app-modal :onModalSubmit="submitModal" submitText="Confirm">
+  <app-modal
+    :onModalSubmit="submitModal"
+    submitText="Confirm"
+    :isSubmitButtonEnabled="isAllowedPrice"
+  >
     <div class="deal">
       <!-- TODO: replace by actual name -->
       <div class="deal-highlight">{{ exchange.user.fullName }} Offer</div>
@@ -22,7 +26,12 @@
         <div class="field" :class="!isOfferingCredit ? 'disabled' : ''">
           <label class="label">How Much Credit ?</label>
           <div class="control">
-            <input class="input" type="number" placeholder="40" />
+            <input
+              v-model="selectedCredit"
+              class="input"
+              type="number"
+              placeholder="40"
+            />
           </div>
         </div>
         <!-- TODO: provide "disabled" class when user IS offering credit -->
@@ -30,13 +39,29 @@
           <label class="label">Exchange</label>
           <div class="control">
             <div class="select">
-              <select>
-                <option value="service">Service</option>
-                <option value="product">Product</option>
+              <select v-model="selectedExchange">
+                <option value="null" disabled>Exchange</option>
+                <option
+                  v-for="offeredExchange in offeredExchanges"
+                  :key="offeredExchange.id"
+                  :value="exchange"
+                  >{{ exchange.title }}</option
+                >
               </select>
             </div>
           </div>
         </div>
+        <div v-if="selectedExchange">
+          Your price is:
+          <span class="deal-hightlight">{{ selectedExchange.price }}$</span>
+        </div>
+        <div
+          :class="`price price-${priceDifferenceClass}`"
+          v-if="percentDifference !== null"
+        >
+          {{ priceDifferenceText }}
+        </div>
+        <i>Allowed difference is not less than {{ ALLOWED_DIFFERENCE }}%</i>
       </div>
     </div>
     <template #openingElement>
@@ -64,12 +89,58 @@ export default {
       type: Object,
       required: true,
     },
+    offeredExchanges: {
+      type: Array,
+      required: true,
+    },
   },
   data() {
     return {
-      profileToUpdate: { ...this.userProfile },
       isOfferingCredit: false,
+      selectedExchange: null,
+      selectedCredit: null,
+      ALLOWED_DIFFERENCE: 20,
     };
+  },
+  computed: {
+    offeredPrice() {
+      if (this.isOfferingCredit) {
+        return this.selectedCredit;
+      }
+      return this.selectedExchange && this.selectedExchange.price;
+    },
+    percentDifference() {
+      if (!this.offeredPrice) {
+        return null;
+      }
+
+      const priceDifference = this.offeredPrice - this.exchange.price;
+      const percantageDifference =
+        (priceDifference / this.exchange.price) * 100;
+      return percantageDifference;
+    },
+    priceDifferenceText() {
+      if (this.percentDifference === null) {
+        return '';
+      }
+      if (this.percentDifference === 0) {
+        return 'You are offering the exact same ammount';
+      }
+
+      const rounded = Math.round(this.percentDifference * 100) / 100;
+      const differenceText = this.percentDifference > 0 ? 'higher' : 'lower';
+
+      return `Offered price is ${rounded}% ${differenceText} than exchange text`;
+    },
+    isAllowedPrice() {
+      if (!this.offeredPrice) {
+        return false;
+      }
+      return this.percentDifference >= -this.ALLOWED_DIFFERENCE;
+    },
+    priceDifferenceClass() {
+      return this.isAllowedPrice ? 'allowed' : 'declined';
+    },
   },
   methods: {
     submitModal() {},
@@ -78,6 +149,18 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.price {
+  padding: 7px;
+
+  &-allowed {
+    background-color: #cdeacd;
+  }
+
+  &-declined {
+    background-color: #ffc2c2;
+  }
+}
+
 .deal-wrapper {
   margin-bottom: 10px;
 }

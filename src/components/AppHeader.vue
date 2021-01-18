@@ -3,12 +3,12 @@
     <nav class="navbar" :class="$route.path === '/' ? '' : 'with-background'">
       <div class="container">
         <div class="navbar-brand">
-          <a
+          <router-link
             class="navbar-item has-text-white is-size-2 has-text-weight-bold"
-            href="#"
+            to="/"
           >
             {{ brandName }}
-          </a>
+          </router-link>
           <span
             role="button"
             tabindex="0"
