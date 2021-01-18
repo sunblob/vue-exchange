@@ -19,10 +19,14 @@
                 placeholder="Your Email"
                 autocomplete="email"
               />
-              <!-- <div class="form-error">
-                <span class="help is-danger">Email is required</span>
-                <span class="help is-danger">Email address is not valid</span>
-              </div> -->
+              <div v-if="$v.form.email.$error" class="form-error">
+                <span v-if="!$v.form.email.required" class="help is-danger">
+                  Email is required
+                </span>
+                <span v-if="!$v.form.email.emailValid" class="help is-danger">
+                  Email address is not valid
+                </span>
+              </div>
             </div>
           </div>
           <div class="field">
@@ -33,10 +37,9 @@
                 type="text"
                 placeholder="Full Name"
               />
-              <!-- <div class="form-error">
-                <span class="help is-danger">Email is required</span>
-                <span class="help is-danger">Email address is not valid</span>
-              </div> -->
+              <div v-if="$v.form.fullName.$error" class="form-error">
+                <span class="help is-danger">Name is required</span>
+              </div>
             </div>
           </div>
           <div class="field">
@@ -47,10 +50,14 @@
                 type="text"
                 placeholder="Avatar Url"
               />
-              <!-- <div class="form-error">
-                <span class="help is-danger">Email is required</span>
-                <span class="help is-danger">Email address is not valid</span>
-              </div> -->
+              <div v-if="$v.form.avatar.$error" class="form-error">
+                <span v-if="!$v.form.avatar.required" class="help is-danger"
+                  >Avatar is required</span
+                >
+                <span v-if="!$v.form.avatar.url" class="help is-danger"
+                  >Avatar url is not valid</span
+                >
+              </div>
             </div>
           </div>
           <div class="field">
@@ -62,9 +69,9 @@
                 placeholder="Your Password"
                 autocomplete="current-password"
               />
-              <!-- <div class="form-error">
+              <div v-if="$v.form.password.$error" class="form-error">
                 <span class="help is-danger">Password is required</span>
-              </div> -->
+              </div>
             </div>
           </div>
           <div class="field">
@@ -76,13 +83,28 @@
                 placeholder="Confirm Your Password"
                 autocomplete="current-password"
               />
-              <!-- <div class="form-error">
-                <span class="help is-danger">Password is required</span>
-              </div> -->
+              <div
+                v-if="$v.form.passwordConfirmation.$error"
+                class="form-error"
+              >
+                <span
+                  v-if="!$v.form.passwordConfirmation.required"
+                  class="help is-danger"
+                >
+                  Password is required
+                </span>
+                <span
+                  v-if="!$v.form.passwordConfirmation.sameAsPassword"
+                  class="help is-danger"
+                >
+                  Password confirmation has to be the same as password!
+                </span>
+              </div>
             </div>
           </div>
           <button
-            @click.prevent="handleRegister"
+            @click.prevent="onRegister"
+            :disabled="!isFormValid && $v.form.$dirty"
             class="button is-block is-info is-large is-fullwidth"
           >
             Sign Up
@@ -99,6 +121,8 @@
 </template>
 
 <script>
+import { required, url, sameAs, email } from 'vuelidate/lib/validators';
+
 export default {
   data: () => ({
     form: {
@@ -109,6 +133,33 @@ export default {
       passwordConfirmation: '',
     },
   }),
+  validations: {
+    form: {
+      email: {
+        required,
+        emailValid: email,
+      },
+      fullName: {
+        required,
+      },
+      avatar: {
+        url,
+        required,
+      },
+      password: {
+        required,
+      },
+      passwordConfirmation: {
+        required,
+        sameAsPassword: sameAs('password'),
+      },
+    },
+  },
+  computed: {
+    isFormValid() {
+      return !this.$v.form.$invalid;
+    },
+  },
   methods: {
     async handleRegister() {
       try {
@@ -130,6 +181,13 @@ export default {
         this.$toasted.error(error, {
           duration: 3000,
         });
+      }
+    },
+    onRegister() {
+      this.$v.form.$touch();
+
+      if (this.isFormValid) {
+        this.handleRegister();
       }
     },
   },

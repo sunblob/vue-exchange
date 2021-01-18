@@ -1,9 +1,7 @@
 <template>
   <div>
     <app-header :brandName="brandName" :items="menuItems" />
-    <div :class="$route.path === '/' ? '' : 'page-wrapper'">
-      <router-view />
-    </div>
+    <router-view />
   </div>
 </template>
 
@@ -28,14 +26,6 @@ export default {
       {
         text: 'FAQ',
         link: '/faq',
-      },
-      {
-        text: 'Login',
-        link: '/login',
-      },
-      {
-        text: 'Register',
-        link: '/register',
       },
     ],
   }),

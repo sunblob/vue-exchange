@@ -67,6 +67,10 @@ a {
   position: absolute;
   width: 100%;
 
+  &.base-header {
+    position: inherit;
+  }
+
   .navbar {
     background: transparent;
     min-height: 4.5rem;

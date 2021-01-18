@@ -1,6 +1,7 @@
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import { db } from '@/firebase';
+// import Vue from 'vue';
 
 export default {
   namespaced: true,
@@ -11,6 +12,14 @@ export default {
     setAuthUser(state, payload) {
       state.user = payload;
     },
+    setUserProfile(state, payload) {
+      state.user.profile = payload;
+
+      // Vue.set(state.user, 'profile', payload)
+    },
+    addExchangeToUser(state, payload) {
+      state.user.profile.exchanges.push(payload);
+    },
   },
   actions: {
     async signUp(_, { email, password }) {
@@ -18,9 +27,6 @@ export default {
         const { user } = await firebase
           .auth()
           .createUserWithEmailAndPassword(email, password);
-        // .catch((error) => {
-        //   console.log(error);
-        // });
 
         return user;
       } catch (error) {
@@ -38,11 +44,36 @@ export default {
         throw new Error(error.message);
       }
     },
+    async signOut(state) {
+      await firebase.auth().signOut();
+      state.commit('setAuthUser', null);
+    },
     createUserProfile(_, { uid, userProfile }) {
       return db
         .collection('profiles')
         .doc(uid)
         .set(userProfile);
+    },
+    storeAuthUser(state, user) {
+      return db
+        .collection('profiles')
+        .doc(user.uid)
+        .get()
+        .then((snapshot) => {
+          const profile = snapshot.data();
+          user.profile = profile;
+          state.commit('setAuthUser', user);
+          return profile;
+        });
+    },
+    updateProfile(state, profile) {
+      return db
+        .collection('profiles')
+        .doc(profile.user)
+        .update(profile)
+        .then(() => {
+          state.commit('setUserProfile', profile);
+        });
     },
   },
   getters: {

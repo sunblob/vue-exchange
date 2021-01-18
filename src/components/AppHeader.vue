@@ -1,5 +1,5 @@
 <template>
-  <header class="header">
+  <header class="header" :class="$route.path === '/' ? '' : 'base-header'">
     <nav class="navbar" :class="$route.path === '/' ? '' : 'with-background'">
       <div class="container">
         <div class="navbar-brand">
@@ -22,12 +22,6 @@
         </div>
         <div id="navbar-menu" class="navbar-menu">
           <div class="navbar-end">
-            <!-- Loop through the navigation items -->
-            <!-- <a class="navbar-item nav-home" href="#">Home</a>
-            <a class="navbar-item nav-style-guide" href="#">About</a>
-            <a class="navbar-item nav-features" href="#">FAQ</a>
-            <a class="navbar-item nav-tech" href="#">Login</a>
-            <a class="navbar-item nav-web" href="#">Register</a> -->
             <div v-if="isAuthenticated" class="navbar-item nav-home">
               {{ user.email }}
             </div>
@@ -39,14 +33,24 @@
               >{{ item.text }}
             </router-link>
             <template v-if="!isAuthenticated">
-              <router-link to="/login" class="navbar-item nav-home"
-                >Login</router-link
-              >
-              <router-link to="/register" class="navbar-item nav-home"
-                >Register</router-link
-              >
+              <router-link to="/login" class="navbar-item nav-home">
+                Login
+              </router-link>
+              <router-link to="/register" class="navbar-item nav-home">
+                Register
+              </router-link>
             </template>
-            <template v-else> </template>
+            <template v-else>
+              <router-link to="/users/me" class="navbar-item nav-home">
+                Profile
+              </router-link>
+              <router-link to="/exchanges/new" class="navbar-item nav-home">
+                Create Exchange
+              </router-link>
+              <a @click="signOut" href="#" class="navbar-item nav-home">
+                Logout
+              </a>
+            </template>
           </div>
         </div>
       </div>
@@ -71,6 +75,14 @@ export default {
     },
     isAuthenticated() {
       return this.$store.getters['auth/isAuthenticated'];
+    },
+  },
+  methods: {
+    signOut() {
+      this.$store.dispatch('auth/signOut');
+      this.$toasted.success('Logged Out!', {
+        duration: 3000,
+      });
     },
   },
 };

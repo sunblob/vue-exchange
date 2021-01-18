@@ -1,56 +1,71 @@
 import { firestoreAction } from 'vuexfire';
 import { db } from '@/firebase';
+import firebase from 'firebase/app';
+import 'firebase/firestore';
 
 export default {
   namespaced: true,
   state: {
     items: [],
+    item: {},
   },
   mutations: {
     setExchanges(state, payload) {
       state.items = payload;
     },
+    setExchange(state, payload) {
+      state.item = payload;
+    },
   },
   actions: {
-    // getExchanges(context) {
-    //   context.commit('setExchanges', exchanges);
-    // },
     bindExchanges: firestoreAction(({ bindFirestoreRef }) => {
       return bindFirestoreRef('items', db.collection('exchanges'));
     }),
+    createExchange({ rootState }, exchange) {
+      exchange.status = 'active';
+      exchange.price = +exchange.price;
+
+      const userRef = db.collection('profiles').doc(rootState.auth.user.uid);
+
+      exchange.user = userRef;
+
+      return db
+        .collection('exchanges')
+        .add(exchange)
+        .then(async (docRef) => {
+          const exchangeSnap = await docRef.get();
+          const ex = exchangeSnap.data();
+          console.log(docRef, exchangeSnap, ex);
+          await userRef.update({
+            exchanges: firebase.firestore.FieldValue.arrayUnion({
+              id: docRef.id,
+              title: ex.title,
+              type: ex.type,
+              price: ex.price,
+            }),
+          });
+
+          // commit('auth/addExchangeToUser', docRef.id, { root: true });
+        });
+    },
+    getExchangeById({ commit }, id) {
+      commit('setExchange', {});
+      return db
+        .collection('exchanges')
+        .doc(id)
+        .get()
+        .then(async (snapshot) => {
+          const exchange = snapshot.data();
+          exchange.id = snapshot.id;
+          const userSnapshot = await exchange.user.get();
+          exchange.user = userSnapshot.data();
+          commit('setExchange', exchange);
+          return exchange;
+        });
+    },
   },
   getters: {
     items: (state) => state.items,
+    item: (state) => (id) => state.items.find((item) => item.id === id),
   },
 };
-
-// const exchanges = [
-//   {
-//     id: 'ad7asdsa68dasds',
-//     type: 'product', // service or product
-//     title: 'I have Driller',
-//     description: 'I will exchange this super driller...',
-//     value: 20, // value per hour in case of service,
-//     user: '2398173193',
-//     image:
-//       'https://images.unsplash.com/photo-1458829549177-e9a8f3db5b14?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80',
-//     country: 'Germany',
-//     city: 'Berlin',
-//     status: 'active',
-//     tags: ['tools'], // can be active/inactive,
-//   },
-//   {
-//     id: 'ad7asdsa68dasd',
-//     type: 'service', // service or product
-//     title: 'I will teach programming',
-//     description: 'I will make you super programmer',
-//     value: 20, // value per hour in case of service,
-//     user: '2398173193',
-//     image:
-//       'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80',
-//     country: 'Germany',
-//     city: 'Berlin',
-//     status: 'active',
-//     tags: ['pc', 'programming'], // can be active/inactive
-//   },
-// ];
